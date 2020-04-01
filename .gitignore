@@ -1,0 +1,7 @@
+.pyenv
+.vscode
+**/local/*
+**/out/*
+**/output/*
+**/secret/*
+**/*.egg-info/*
