@@ -4,12 +4,11 @@
 
 import pathlib
 
-import httplib2
-import apiclient
+import googleapiclient.discovery
+import google.oauth2.service_account
 
-import oauth2client.service_account
+import googlesheets.request
 
-from googlesheets import request
 
 class Client(object):
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
@@ -23,29 +22,17 @@ class Client(object):
 
         self.spreadsheet_id = spreadsheet_id
 
-    def initialise(self, json_keyfile: pathlib.Path) -> None:
+    def init(self, json_keyfile: pathlib.Path, version: str = 'v4') -> None:
         """instantiate the service client and complete authorization via oauth2 flow."""
 
-        self.json_keyfile = json_keyfile
-
-        args = [
-            str(self.json_keyfile),
-            Client.SCOPES,
-        ]
-
-        credentials = oauth2client.service_account.ServiceAccountCredentials.from_json_keyfile_name(*args)
-
-        args = [
-            'sheets',
-            'v4'
-        ]
+        credentials = google.oauth2.service_account.Credentials.from_service_account_file(str(json_keyfile), scopes=Client.SCOPES)
 
         params = {
-            'http': credentials.authorize(httplib2.Http()),
+            'credentials': credentials,
             'discoveryServiceUrl': Client.DISCOVERY_URL,
         }
 
-        self.service = apiclient.discovery.build(*args, **params).spreadsheets()
+        self.service = googleapiclient.discovery.build('sheets', version, **params).spreadsheets()
 
     def spreadsheet(self, refresh: bool = True) -> dict:
         """submit a request for the current spreadsheet. if `refresh` is `False`, returns a cached value."""
@@ -66,11 +53,11 @@ class Client(object):
 
             return self.cached_spreadsheet
 
-    def batch_update(self, payload: request.RequestBody) -> dict:
-        """submit a batch update request. primarily used to create new sheets within the current spreadsheet."""
+    def batch_update(self, payload: googlesheets.request.RequestBody) -> dict:
+        """submit a batch update request. note: update differs from values.update."""
 
         params = {
-            'spreadsheetId': payload.spreadsheet_id,
+            'spreadsheetId': self.spreadsheet_id,
             'body': payload.body,
         }
 
@@ -81,11 +68,33 @@ class Client(object):
         except Exception:
             raise
 
-    def batch_values_update(self, payload: request.RequestBody) -> dict:
-        """submit a batch values update request. primarily used to write new rows to a sheet."""
+    def batch_values_get(self, payload: googlesheets.request.RequestBody) -> dict:
+        """submit a batch values get request."""
+
+        if 'valueRenderOption' not in payload.body:
+            raise ValueError('missing required field: "valueRenderOption"')
 
         params = {
-            'spreadsheetId': payload.spreadsheet_id,
+            'spreadsheetId': self.spreadsheet_id,
+            'ranges': payload.body.get('ranges'),
+            'valueRenderOption': payload.body.get('valueRenderOption')
+        }
+
+        if 'dateTimeRenderOption' in payload.body:
+            params['dateTimeRenderOption'] = payload.body['dateTimeRenderOption']
+
+        req = self.service.values().batchGet(**params)
+
+        try:
+            return req.execute()
+        except Exception:
+            raise
+
+    def batch_values_update(self, payload: googlesheets.request.RequestBody) -> dict:
+        """submit a batch values update request. note: values.update differs from update."""
+
+        params = {
+            'spreadsheetId': self.spreadsheet_id,
             'body': payload.body,
         }
 
@@ -96,11 +105,11 @@ class Client(object):
         except Exception:
             raise
 
-    def batch_values_clear(self, payload: request.RequestBody) -> dict:
-        """submit a batch values clear request. primarily used to delete existing rows from a sheet."""
+    def batch_values_clear(self, payload: googlesheets.request.RequestBody) -> dict:
+        """submit a batch values clear request."""
 
         params = {
-            'spreadsheetId': payload.spreadsheet_id,
+            'spreadsheetId': self.spreadsheet_id,
             'body': payload.body,
         }
 

@@ -4,11 +4,13 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+googlesheets = {editable = true,path = "."}
 
 [packages]
-google-api-python-client = "*"
+google-auth = "*"
 google-auth-httplib2 = "*"
 google-auth-oauthlib = "*"
+google-api-python-client = "*"
 
 [requires]
 python_version = "3.8"

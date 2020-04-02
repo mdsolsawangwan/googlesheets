@@ -12,20 +12,20 @@ a small `python` wrapper client for the `googlesheets` v4 api.
   ```python
   client = googlesheets.api.Client('SPREADSHEET_ID')
   ```
-  - _load the client credentials_
+  - _load client credentials_
   ```python
-  client.initialise('./PATH/TO/KEY_FILE.json')
+  client.init('./PATH/TO/KEY_FILE.json')
   ```
   - _clear all rows in a sheet except the first_
   ```python
-  batch_clear = googlesheets.request.BatchUpdateValuesClear(client.spreadsheet_id)
+  batch_clear = googlesheets.request.BatchUpdateValuesClear()
   batch_clear.append('SHEET_NAME!A2:Z')
 
   print(client.batch_values_clear(batch_clear))
   ```
   - _write rows starting from the second_
   ```python
-  batch_update = googlesheets.request.BatchUpdateValuesRaw(gsc.spreadsheet_id)
+  batch_update = googlesheets.request.BatchUpdateValuesRaw()
   batch_update.append({
         'range': 'SHEET_NAME!A2',
         'values': [
