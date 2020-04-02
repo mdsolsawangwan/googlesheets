@@ -22,7 +22,7 @@ class TestAPI(unittest.TestCase):
         }
 
         http = googleapiclient.http.HttpMock(
-            'data/sheets-v4-discovery.json',
+            'data/config-v4/sheets-discovery.json',
             self.ok)
 
         self.client = googlesheets.api.Client('')
@@ -37,7 +37,7 @@ class TestAPI(unittest.TestCase):
         req = googlesheets.request.BatchGetValuesFormatted()
         req.append(f'sheets!A1')
 
-        http = googleapiclient.http.HttpMock('data/sheets-v4-batch-values-get.json', {'status': '200'})
+        http = googleapiclient.http.HttpMock('data/response-v4/batch-values-get.json', self.ok)
         res = self.client.batch_values_get(req, transport=http)
 
         print(
@@ -47,7 +47,7 @@ class TestAPI(unittest.TestCase):
         req = googlesheets.request.BatchGetValuesFormatted()
         req.append(f'sheets!A1')
 
-        http = googleapiclient.http.HttpMock('data/sheets-v4-batch-values-get-no-header.json', {'status': '200'})
+        http = googleapiclient.http.HttpMock('data/response-v4/batch-values-get.no-header.json', self.ok)
         res = self.client.batch_values_get(req, transport=http)
 
         print(
