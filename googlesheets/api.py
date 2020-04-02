@@ -11,30 +11,44 @@ import googlesheets.request
 
 
 class Client(object):
-    SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-    DISCOVERY_URL = 'https://sheets.googleapis.com/$discovery/rest?version=v4'
+    DEFAULT_SCOPES = [
+        'https://www.googleapis.com/auth/spreadsheets',
+    ]
 
     def __init__(self, spreadsheet_id: str) -> None:
-        self.json_keyfile = None
-        self.service = None
-
-        self.cached_spreadsheet = None # cached spreadsheet object
-
         self.spreadsheet_id = spreadsheet_id
 
-    def init(self, json_keyfile: pathlib.Path, version: str = 'v4') -> None:
-        """instantiate the service client and complete authorization via oauth2 flow."""
+        self.service = None
+        self.cached_spreadsheet = None # cached spreadsheet object
 
-        credentials = google.oauth2.service_account.Credentials.from_service_account_file(str(json_keyfile), scopes=Client.SCOPES)
+    def __call__(self, req: 'service.request', transport: 'httplib2.Http' = None) -> dict:
+        """executes a request against the googlesheets service api."""
+
+        params = {}
+
+        if transport:
+            params['http'] = transport
+
+        try:
+            return req.execute(**params)
+        except Exception:
+            raise
+
+    def init(self, json_keyfile: pathlib.Path, version: str = 'v4') -> None:
+        """instantiate the googlesheets oauth2 service client."""
+
+        credentials = google.oauth2.service_account.Credentials.from_service_account_file(
+            str(json_keyfile), scopes=Client.DEFAULT_SCOPES)
 
         params = {
             'credentials': credentials,
-            'discoveryServiceUrl': Client.DISCOVERY_URL,
+            'discoveryServiceUrl': f'https://sheets.googleapis.com/$discovery/rest?version={version}',
         }
 
-        self.service = googleapiclient.discovery.build('sheets', version, **params).spreadsheets()
+        self.service = googleapiclient.discovery.build(
+            'sheets', version, **params).spreadsheets()
 
-    def spreadsheet(self, refresh: bool = True) -> dict:
+    def spreadsheet(self, refresh: bool = True, transport: 'httplib2.Http' = None) -> dict:
         """submit a request for the current spreadsheet. if `refresh` is `False`, returns a cached value."""
 
         params = {
@@ -44,7 +58,7 @@ class Client(object):
         req = self.service.get(**params)
 
         try:
-            res = req.execute()
+            res = self(req, transport=transport)
         except Exception:
             raise
         else:
@@ -53,7 +67,7 @@ class Client(object):
 
             return self.cached_spreadsheet
 
-    def batch_update(self, payload: googlesheets.request.RequestBody) -> dict:
+    def batch_update(self, payload: googlesheets.request.RequestBody, transport: 'httplib2.Http' = None) -> dict:
         """submit a batch update request. note: update differs from values.update."""
 
         params = {
@@ -63,21 +77,18 @@ class Client(object):
 
         req = self.service.batchUpdate(**params)
 
-        try:
-            return req.execute()
-        except Exception:
-            raise
+        return self(req, transport=transport)
 
-    def batch_values_get(self, payload: googlesheets.request.RequestBody) -> dict:
+    def batch_values_get(self, payload: googlesheets.request.RequestBody, transport: 'httplib2.Http' = None) -> dict:
         """submit a batch values get request."""
 
         if 'valueRenderOption' not in payload.body:
             raise ValueError('missing required field: "valueRenderOption"')
 
         params = {
+            'ranges': payload.body['ranges'],
             'spreadsheetId': self.spreadsheet_id,
-            'ranges': payload.body.get('ranges'),
-            'valueRenderOption': payload.body.get('valueRenderOption')
+            'valueRenderOption': payload.body['valueRenderOption'],
         }
 
         if 'dateTimeRenderOption' in payload.body:
@@ -85,12 +96,9 @@ class Client(object):
 
         req = self.service.values().batchGet(**params)
 
-        try:
-            return req.execute()
-        except Exception:
-            raise
+        return self(req, transport=transport)
 
-    def batch_values_update(self, payload: googlesheets.request.RequestBody) -> dict:
+    def batch_values_update(self, payload: googlesheets.request.RequestBody, transport: 'httplib2.Http' = None) -> dict:
         """submit a batch values update request. note: values.update differs from update."""
 
         params = {
@@ -100,12 +108,9 @@ class Client(object):
 
         req = self.service.values().batchUpdate(**params)
 
-        try:
-            return req.execute()
-        except Exception:
-            raise
+        return self(req, transport=transport)
 
-    def batch_values_clear(self, payload: googlesheets.request.RequestBody) -> dict:
+    def batch_values_clear(self, payload: googlesheets.request.RequestBody, transport: 'httplib2.Http' = None) -> dict:
         """submit a batch values clear request."""
 
         params = {
@@ -115,7 +120,4 @@ class Client(object):
 
         req = self.service.values().batchClear(**params)
 
-        try:
-            return req.execute()
-        except Exception:
-            raise
+        return self(req, transport=transport)
