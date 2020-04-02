@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": 400,
+    "message": "Unable to parse range: sheets.xA1",
+    "status": "INVALID_ARGUMENT"
+  }
+}

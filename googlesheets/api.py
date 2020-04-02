@@ -1,14 +1,23 @@
 #!/usr/bin/env python
 
-# pylint: disable=fixme
-
+import json
 import pathlib
 
+import googleapiclient.errors
 import googleapiclient.discovery
+
 import google.oauth2.service_account
 
 import googlesheets.request
 
+def parse_http_error(e: googleapiclient.errors.HttpError) -> dict:
+    """helper function for extracting an error object from an http exception."""
+
+    return (
+        json.loads(e.content)
+        if e.resp.get('content-type', '').startswith('application/json') else
+        {}
+    )
 
 class Client(object):
     DEFAULT_SCOPES = [
