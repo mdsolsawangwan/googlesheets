@@ -1,0 +1,72 @@
+{
+  "spreadsheetId": "1zVEkLBmEt91G61FXtEQ8ThmxT0JMkx8wBQBTDRpysMI",
+  "properties": {
+    "title": "spreadsheet",
+    "locale": "en_US",
+    "autoRecalc": "ON_CHANGE",
+    "timeZone": "America/Los_Angeles",
+    "defaultFormat": {
+      "backgroundColor": {
+        "red": 1,
+        "green": 1,
+        "blue": 1
+      },
+      "padding": {
+        "top": 2,
+        "right": 3,
+        "bottom": 2,
+        "left": 3
+      },
+      "verticalAlignment": "BOTTOM",
+      "wrapStrategy": "OVERFLOW_CELL",
+      "textFormat": {
+        "foregroundColor": {},
+        "fontFamily": "arial,sans,sans-serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "foregroundColorStyle": {
+          "rgbColor": {}
+        }
+      },
+      "backgroundColorStyle": {
+        "rgbColor": {
+          "red": 1,
+          "green": 1,
+          "blue": 1
+        }
+      }
+    }
+  },
+  "sheets": [
+    {
+      "properties": {
+        "sheetId": 1440328602,
+        "title": "sheet0",
+        "index": 0,
+        "sheetType": "GRID",
+        "gridProperties": {
+          "rowCount": 1000,
+          "columnCount": 26,
+          "frozenRowCount": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "sheetId": 1915588750,
+        "title": "sheet1",
+        "index": 1,
+        "sheetType": "GRID",
+        "gridProperties": {
+          "rowCount": 1000,
+          "columnCount": 26,
+          "frozenRowCount": 1
+        }
+      }
+    }
+  ],
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1zVEkLBmEt91G61FXtEQ8ThmxT0JMkx8wBQBTDRpysMI/edit"
+}

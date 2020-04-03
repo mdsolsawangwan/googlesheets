@@ -5,122 +5,199 @@ googlesheets api v4 request objects.
 
 import json
 import typing
+import collections
 
-field = typing.Tuple[str, str]
-fields = typing.List[field]
+query_parameter = collections.namedtuple(
+    'query_parameter',
+    ('parameter_name', 'parameter_value')
+)
 
-class RequestBody(object):
-    """base class for a googlesheets api request body."""
+class Payload(object):
+    """base class for all api request payload objects."""
 
-    def __init__(self, request_body_key: str, required_fields: fields = None) -> None:
-        """`required_fields` is a list of key-value pair tuples."""
-
-        self.request_body_key = request_body_key
-
-        self.body = {
-            request_body_key: []
-        }
-
-        if required_fields:
-            for k, v in required_fields:
-                self.body[k] = v
+    def __init__(self) -> None:
+        self.body = {}
 
     def __str__(self) -> str:
         return json.dumps(self.body, indent=1, default=str)
 
-    def append(self, *requests: typing.Any) -> None:
+class Body(Payload):
+    """represents a payload for a a non-batched api request."""
+
+    def __init__(self, value_range: str, *query_parameters: query_parameter) -> None:
+        """a `value_range` string is assumed to be valid `A1` syntax"""
+
+        super().__init__()
+
+        self.value_range = value_range
+        self.body['range'] = value_range
+
+        for q in query_parameters:
+            self.body[q.parameter_name] = q.parameter_value
+
+class BatchBody(Payload):
+    """represents a payload for a batched api request."""
+
+    def __init__(self, key: str, *query_parameters: query_parameter) -> None:
+        """a `key` string is assumed to be valid request body key as defined in the sheets api spec."""
+
+        super().__init__()
+
+        self.key = key
+        self.body[key] = []
+
+        for q in query_parameters:
+            self.body[q.parameter_name] = q.parameter_value
+
+    def append(self, *values: typing.Any) -> None:
         """append one or more values to the request body. child classes define the shape of an expected value."""
 
-        for r in requests:
-            self.body[self.request_body_key].append(r)
+        for v in values:
+            self.body[self.key].append(v)
 
-# class RequestRead(RequestBody):
-#     def __init__(self, datetime_render_option: str = None) -> None:
-#         if datetime_render_option not in {'SERIAL_NUMBER', 'FORMATTED_STRING'}:
-#             datetime_render_option = 'SERIAL_NUMBER'
-
-#         super().__init__(
-#             'ranges',
-#             required_fields=[
-#                 ('valueRenderOption', 'UNFORMATTED_VALUE'),
-#                 ('dateTimeRenderOption', datetime_render_option),
-#             ]
-#         )
-
-# class RequestWrite(RequestBody):
-#     def __init__(self, request_body_key: str) -> None:
-
-
-class BatchUpdate(RequestBody):
+class BatchGet(BatchBody):
     """note, this differs from `spreadsheet.values().batchUpdate`."""
 
     def __init__(self) -> None:
         super().__init__('requests')
 
-class BatchGetValuesFormatted(RequestBody):
-    """
-    fetch multiple row ranges, returned text retains cell formatting.
+class ValuesGetFormatted(Body):
+    query_parameters = [
+        query_parameter('valueRenderOption', 'FORMATTED_VALUE'),
+    ]
 
-    calls to `.append()` take an object with the following shape:
+    def __init__(self, value_range: str) -> None:
+        super().__init__(value_range, *ValuesGetFormatted.query_parameters)
+
+class ValuesGetUnformatted(Body):
+    query_parameters = [
+        query_parameter('valueRenderOption', 'UNFORMATTED_VALUE'),
+    ]
+
+    def __init__(self, value_range: str) -> None:
+        super().__init__(value_range, *ValuesGetFormatted.query_parameters)
+
+class ValuesGetFormula(Body):
+    query_parameters = [
+        query_parameter('valueRenderOption', 'FORMULA'),
+    ]
+
+    def __init__(self, value_range: str) -> None:
+        super().__init__(value_range, *ValuesGetFormatted.query_parameters)
+
+class ValuesUpdateRaw(Body):
+    query_parameters = [
+        query_parameter('valueInputOption', 'RAW'),
+    ]
+
+    def __init__(self, value_range: str, value_range_body: list) -> None:
+        super().__init__(value_range, *ValuesUpdateRaw.query_parameters)
+
+        self.body['body'] = {
+            'values': [value_range_body],
+        }
+
+class ValuesUpdateUserEntered(Body):
+    query_parameters = [
+        query_parameter('valueInputOption', 'USER_ENTERED'),
+    ]
+
+    def __init__(self, value_range: str, value_range_body: list) -> None:
+        super().__init__(value_range, *ValuesUpdateUserEntered.query_parameters)
+
+        self.body['body'] = {
+            'values': [value_range_body],
+        }
+
+class ValuesAppendRaw(Body):
+    query_parameters = [
+        query_parameter('valueInputOption', 'RAW'),
+    ]
+
+    def __init__(self, value_range: str, value_range_body: list, value_input_option: str = None) -> None:
+        if value_input_option not in {'OVERWRITE', 'INSERT_ROWS'}:
+            value_input_option = 'INSERT_ROWS'
+
+        qp = query_parameter('valueInputOption', value_input_option)
+
+        super().__init__(value_range, qp, *ValuesAppendRaw.query_parameters)
+
+        self.body['body'] = {
+            'values': [value_range_body],
+        }
+
+class ValuesAppendUserEntered(Body):
+    query_parameters = [
+        query_parameter('valueInputOption', 'USER_ENTERED'),
+    ]
+
+    def __init__(self, value_range: str, value_range_body: list, value_input_option: str = None) -> None:
+        if value_input_option not in {'OVERWRITE', 'INSERT_ROWS'}:
+            value_input_option = 'INSERT_ROWS'
+
+        qp = query_parameter('valueInputOption', value_input_option)
+
+        super().__init__(value_range, qp, *ValuesAppendUserEntered.query_parameters)
+
+        self.body['body'] = {
+            'values': [value_range_body],
+        }
+
+class ValuesBatchGetFormatted(BatchBody):
+    """
+    shape:
 
         str
     """
+
+    query_parameters = [
+        query_parameter('valueRenderOption', 'FORMATTED_VALUE'),
+    ]
 
     def __init__(self) -> None:
-        super().__init__(
-            'ranges',
-            required_fields=[
-                ('valueRenderOption', 'FORMATTED_VALUE'),
-            ]
-        )
+        super().__init__('ranges', *ValuesBatchGetFormatted.query_parameters)
 
-class BatchGetValuesUnformatted(RequestBody):
+class ValuesBatchGetUnformatted(BatchBody):
     """
-    fetch multiple row ranges, returned text ignores cell formatting.
-
-    calls to `.append()` take an object with the following shape:
+    shape:
 
         str
     """
+
+    query_parameters = [
+        query_parameter('valueRenderOption', 'UNFORMATTED_VALUE'),
+    ]
 
     def __init__(self, datetime_render_option: str = None) -> None:
         if datetime_render_option not in {'SERIAL_NUMBER', 'FORMATTED_STRING'}:
             datetime_render_option = 'SERIAL_NUMBER'
 
-        super().__init__(
-            'ranges',
-            required_fields=[
-                ('valueRenderOption', 'UNFORMATTED_VALUE'),
-                ('dateTimeRenderOption', datetime_render_option),
-            ]
-        )
+        qp = query_parameter('dateTimeRenderOption', datetime_render_option)
 
-class BatchGetValuesFormula(RequestBody):
+        super().__init__('ranges', qp, *ValuesBatchGetUnformatted.query_parameters)
+
+class ValuesBatchGetFormula(BatchBody):
     """
-    fetch multiple row ranges, returned text is raw.
-
-    calls to `.append()` take an object with the following shape:
+    shape:
 
         str
     """
+
+    query_parameters = [
+        query_parameter('valueRenderOption', 'FORMULA'),
+    ]
 
     def __init__(self, datetime_render_option: str = None) -> None:
         if datetime_render_option not in {'SERIAL_NUMBER', 'FORMATTED_STRING'}:
             datetime_render_option = 'SERIAL_NUMBER'
 
-        super().__init__(
-            'ranges',
-            required_fields=[
-                ('valueRenderOption', 'FORMULA'),
-                ('dateTimeRenderOption', datetime_render_option),
-            ]
-        )
+        qp = query_parameter('dateTimeRenderOption', datetime_render_option)
 
-class BatchUpdateValuesRaw(RequestBody):
+        super().__init__('ranges', qp, *ValuesBatchGetFormula.query_parameters)
+
+class ValuesBatchUpdateRaw(BatchBody):
     """
-    write multiple rows, raw text.
-
-    calls to `.append()` take an object with the following shape:
+    shape:
 
         {
             "range": str,
@@ -130,19 +207,16 @@ class BatchUpdateValuesRaw(RequestBody):
         }
     """
 
+    query_parameters = [
+        query_parameter('valueInputOption', 'RAW'),
+    ]
+
     def __init__(self) -> None:
-        super().__init__(
-            'data',
-            required_fields=[
-                ('valueInputOption', 'RAW')
-            ]
-        )
+        super().__init__('data', *ValuesBatchUpdateRaw.query_parameters)
 
-class BatchUpdateValuesUserEntered(RequestBody):
+class ValuesBatchUpdateUserEntered(BatchBody):
     """
-    write multiple rows, formatted text.
-
-    calls to `.append()` take an object with the following shape:
+    shape:
 
         {
             "range": str,
@@ -152,19 +226,16 @@ class BatchUpdateValuesUserEntered(RequestBody):
         }
     """
 
+    query_parameters = [
+        query_parameter('valueInputOption', 'USER_ENTERED')
+    ]
+
     def __init__(self) -> None:
-        super().__init__(
-            'data',
-            required_fields=[
-                ('valueInputOption', 'USER_ENTERED')
-            ]
-        )
+        super().__init__('data', *ValuesBatchUpdateUserEntered.query_parameters)
 
-class BatchUpdateValuesClear(RequestBody):
+class ValuesBatchClear(BatchBody):
     """
-    clear multiple ranges.
-
-    calls to `.append()` take an object with the following shape:
+    shape:
 
         str
     """

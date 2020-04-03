@@ -46,8 +46,14 @@ class TestAPI(unittest.TestCase):
             http=http,
             developerKey='secret').spreadsheets()
 
+    def test_get_spreadsheet(self):
+        http = googleapiclient.http.HttpMock('data/response-v4/get-spreadsheet.json', self.ok)
+        res = self.client.get_spreadsheet(refresh=True, transport=http)
+
+        self.assertIsNotNone(res)
+
     def test_batch_get_all_rows(self):
-        req = googlesheets.request.BatchGetValuesFormatted()
+        req = googlesheets.request.ValuesBatchGetFormatted()
         req.append(f'sheets!A1')
 
         http = googleapiclient.http.HttpMock('data/response-v4/batch-values-get.json', self.ok)
@@ -56,7 +62,7 @@ class TestAPI(unittest.TestCase):
         self.assertIsNotNone(res)
 
     def test_batch_get_all_rows_no_headers(self):
-        req = googlesheets.request.BatchGetValuesFormatted()
+        req = googlesheets.request.ValuesBatchGetFormatted()
         req.append(f'sheets!A1')
 
         http = googleapiclient.http.HttpMock('data/response-v4/batch-values-get.no-header.json', self.ok)
@@ -66,7 +72,7 @@ class TestAPI(unittest.TestCase):
         self.assertIsNotNone(res)
 
     def test_error_handling(self):
-        req = googlesheets.request.BatchGetValuesFormatted()
+        req = googlesheets.request.ValuesBatchGetFormatted()
         req.append(f'sheets!A1')
 
         http = googleapiclient.http.HttpMock('data/response-v4/batch-values-get-invalid-argument.json', self.invalid_arg)

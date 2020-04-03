@@ -57,7 +57,7 @@ class Client(object):
         self.service = googleapiclient.discovery.build(
             'sheets', version, **params).spreadsheets()
 
-    def spreadsheet(self, refresh: bool = True, transport: 'httplib2.Http' = None) -> dict:
+    def get_spreadsheet(self, refresh: bool = True, transport: 'httplib2.Http' = None) -> dict:
         """submit a request for the current spreadsheet. if `refresh` is `False`, returns a cached value."""
 
         params = {
@@ -76,7 +76,67 @@ class Client(object):
 
             return self.cached_spreadsheet
 
-    def batch_update(self, payload: googlesheets.request.RequestBody, transport: 'httplib2.Http' = None) -> dict:
+    def values_get(self, payload: googlesheets.request.Body, transport: 'httplib2.Http' = None) -> dict:
+        """submit a values get request."""
+
+
+        if 'valueRenderOption' not in payload.body:
+            raise ValueError('missing required field: "valueRenderOption"')
+
+        params = {
+            'spreadsheetId': self.spreadsheet_id,
+            **payload.body,
+        }
+
+        req = self.service.values().get(**params)
+
+        return self(req, transport=transport)
+
+    def values_update(self, payload: googlesheets.request.Body, transport: 'httplib2.Http' = None) -> dict:
+        """submit a values update request."""
+
+
+        if 'valueInputOption' not in payload.body:
+            raise ValueError('missing required field: "valueInputOption"')
+
+        params = {
+            'spreadsheetId': self.spreadsheet_id,
+            **payload.body,
+        }
+
+        req = self.service.values().update(**params)
+
+        return self(req, transport=transport)
+
+    def values_append(self, payload: googlesheets.request.Body, transport: 'httplib2.Http' = None) -> dict:
+        """submit a values append request."""
+
+
+        if 'valueInputOption' not in payload.body:
+            raise ValueError('missing required field: "valueInputOption"')
+
+        params = {
+            'spreadsheetId': self.spreadsheet_id,
+            **payload.body,
+        }
+
+        req = self.service.values().append(**params)
+
+        return self(req, transport=transport)
+
+    def values_clear(self, payload: googlesheets.request.Body, transport: 'httplib2.Http' = None) -> dict:
+        """submit a values clear request."""
+
+        params = {
+            'spreadsheetId': self.spreadsheet_id,
+            **payload.body,
+        }
+
+        req = self.service.values().clear(**params)
+
+        return self(req, transport=transport)
+
+    def batch_update(self, payload: googlesheets.request.Body, transport: 'httplib2.Http' = None) -> dict:
         """submit a batch update request. note: update differs from values.update."""
 
         params = {
@@ -88,7 +148,7 @@ class Client(object):
 
         return self(req, transport=transport)
 
-    def batch_values_get(self, payload: googlesheets.request.RequestBody, transport: 'httplib2.Http' = None) -> dict:
+    def batch_values_get(self, payload: googlesheets.request.Body, transport: 'httplib2.Http' = None) -> dict:
         """submit a batch values get request."""
 
         if 'valueRenderOption' not in payload.body:
@@ -107,7 +167,7 @@ class Client(object):
 
         return self(req, transport=transport)
 
-    def batch_values_update(self, payload: googlesheets.request.RequestBody, transport: 'httplib2.Http' = None) -> dict:
+    def batch_values_update(self, payload: googlesheets.request.Body, transport: 'httplib2.Http' = None) -> dict:
         """submit a batch values update request. note: values.update differs from update."""
 
         params = {
@@ -119,7 +179,7 @@ class Client(object):
 
         return self(req, transport=transport)
 
-    def batch_values_clear(self, payload: googlesheets.request.RequestBody, transport: 'httplib2.Http' = None) -> dict:
+    def batch_values_clear(self, payload: googlesheets.request.Body, transport: 'httplib2.Http' = None) -> dict:
         """submit a batch values clear request."""
 
         params = {
