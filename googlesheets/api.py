@@ -8,7 +8,7 @@ import googleapiclient.discovery
 
 import google.oauth2.service_account
 
-import googlesheets.request
+import googlesheets.resource
 
 def parse_http_error(e: googleapiclient.errors.HttpError) -> dict:
     """helper function for extracting an error object from an http exception."""
@@ -76,7 +76,18 @@ class Client(object):
 
             return self.cached_spreadsheet
 
-    def values_get(self, payload: googlesheets.request.Body, transport: 'httplib2.Http' = None) -> dict:
+    def get(self, transport: 'httplib2.Http' = None) -> dict:
+        """submit a get request."""
+
+        params = {
+            'spreadsheetId': self.spreadsheet_id
+        }
+
+        req = self.service.get(**params)
+
+        return self(req, transport=transport)
+
+    def values_get(self, payload: googlesheets.resource.Request, transport: 'httplib2.Http' = None) -> dict:
         """submit a values get request."""
 
 
@@ -92,7 +103,7 @@ class Client(object):
 
         return self(req, transport=transport)
 
-    def values_update(self, payload: googlesheets.request.Body, transport: 'httplib2.Http' = None) -> dict:
+    def values_update(self, payload: googlesheets.resource.Request, transport: 'httplib2.Http' = None) -> dict:
         """submit a values update request."""
 
 
@@ -108,7 +119,7 @@ class Client(object):
 
         return self(req, transport=transport)
 
-    def values_append(self, payload: googlesheets.request.Body, transport: 'httplib2.Http' = None) -> dict:
+    def values_append(self, payload: googlesheets.resource.Request, transport: 'httplib2.Http' = None) -> dict:
         """submit a values append request."""
 
 
@@ -124,7 +135,7 @@ class Client(object):
 
         return self(req, transport=transport)
 
-    def values_clear(self, payload: googlesheets.request.Body, transport: 'httplib2.Http' = None) -> dict:
+    def values_clear(self, payload: googlesheets.resource.Request, transport: 'httplib2.Http' = None) -> dict:
         """submit a values clear request."""
 
         params = {
@@ -136,7 +147,7 @@ class Client(object):
 
         return self(req, transport=transport)
 
-    def batch_update(self, payload: googlesheets.request.Body, transport: 'httplib2.Http' = None) -> dict:
+    def batch_update(self, payload: googlesheets.resource.Request, transport: 'httplib2.Http' = None) -> dict:
         """submit a batch update request. note: update differs from values.update."""
 
         params = {
@@ -148,7 +159,7 @@ class Client(object):
 
         return self(req, transport=transport)
 
-    def batch_values_get(self, payload: googlesheets.request.Body, transport: 'httplib2.Http' = None) -> dict:
+    def batch_values_get(self, payload: googlesheets.resource.Request, transport: 'httplib2.Http' = None) -> dict:
         """submit a batch values get request."""
 
         if 'valueRenderOption' not in payload.body:
@@ -167,7 +178,7 @@ class Client(object):
 
         return self(req, transport=transport)
 
-    def batch_values_update(self, payload: googlesheets.request.Body, transport: 'httplib2.Http' = None) -> dict:
+    def batch_values_update(self, payload: googlesheets.resource.Request, transport: 'httplib2.Http' = None) -> dict:
         """submit a batch values update request. note: values.update differs from update."""
 
         params = {
@@ -179,7 +190,7 @@ class Client(object):
 
         return self(req, transport=transport)
 
-    def batch_values_clear(self, payload: googlesheets.request.Body, transport: 'httplib2.Http' = None) -> dict:
+    def batch_values_clear(self, payload: googlesheets.resource.Request, transport: 'httplib2.Http' = None) -> dict:
         """submit a batch values clear request."""
 
         params = {

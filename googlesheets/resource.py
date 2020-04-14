@@ -3,17 +3,20 @@
 googlesheets api v4 request objects.
 """
 
+import abc
 import json
 import typing
 import collections
+
+import googlesheets.notation
 
 query_parameter = collections.namedtuple(
     'query_parameter',
     ('parameter_name', 'parameter_value')
 )
 
-class Payload(object):
-    """base class for all api request payload objects."""
+class Request(metaclass=abc.ABCMeta):
+    """base class for all request payload objects."""
 
     def __init__(self) -> None:
         self.body = {}
@@ -21,11 +24,12 @@ class Payload(object):
     def __str__(self) -> str:
         return json.dumps(self.body, indent=1, default=str)
 
-class Body(Payload):
-    """represents a payload for a a non-batched api request."""
+class Body(Request):
+    """represents a payload for a a non-batched request."""
 
-    def __init__(self, value_range: str, *query_parameters: query_parameter) -> None:
-        """a `value_range` string is assumed to be valid `A1` syntax"""
+    def __init__(self, value_range: googlesheets.notation.a1, *query_parameters: query_parameter, validate: bool = True) -> None:
+        if validate and not googlesheets.notation.is_valid_syntax(value_range):
+            raise SyntaxWarning(f'invalid a1 notation: {value_range}')
 
         super().__init__()
 
@@ -35,8 +39,8 @@ class Body(Payload):
         for q in query_parameters:
             self.body[q.parameter_name] = q.parameter_value
 
-class BatchBody(Payload):
-    """represents a payload for a batched api request."""
+class BatchBody(Request):
+    """represents a payload for a batched request."""
 
     def __init__(self, key: str, *query_parameters: query_parameter) -> None:
         """a `key` string is assumed to be valid request body key as defined in the sheets api spec."""
@@ -55,7 +59,7 @@ class BatchBody(Payload):
         for v in values:
             self.body[self.key].append(v)
 
-class BatchGet(BatchBody):
+class BatchUpdate(BatchBody):
     """note, this differs from `spreadsheet.values().batchUpdate`."""
 
     def __init__(self) -> None:
@@ -242,3 +246,48 @@ class ValuesBatchClear(BatchBody):
 
     def __init__(self) -> None:
         super().__init__('ranges')
+
+################################################################################
+# an alternative design that more closely mirrors the sheets api
+#
+####
+    # class Request(metaclass=abc.ABCMeta):
+    #     def __init__(self) -> None:
+    #         self.body = {}
+
+    #     def __str__(self) -> str:
+    #         return json.dumps(
+    #             self.body,
+    #             indent=1,
+    #             default=str,
+    #         )
+
+    # class Spreadsheets(Request):
+    #     pass
+
+    # class SpreadsheetsSheets(Request):
+    #     pass
+
+    # class SpreadsheetsValues(Request):
+    #     pass
+
+    # class SpreadsheetsDeveloperMetadata(Request):
+    #     pass
+
+    # class Get(Spreadsheets):
+    #     pass
+
+    # class BatchUpdate(Spreadsheets):
+    #     pass
+
+    # class ValuesGet(SpreadsheetsValues):
+    #     pass
+
+    # class ValuesUpdate(SpreadsheetsValues):
+    #     pass
+
+    # class ValuesBatchUpdate(SpreadsheetsValues):
+    #     pass
+###
+#
+################################################################################

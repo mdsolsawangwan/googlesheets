@@ -11,31 +11,47 @@ a small `python` wrapper client for the `googlesheets` v4 api.
   - _create a `googlesheets.api.Client`_
   ```python
   client = googlesheets.api.Client('SPREADSHEET_ID')
+  client.init('./PATH/TO/KEY_FILE.json') # load credentials and create a service object
   ```
-  - _load client credentials_
+  - _create a new sheet tab_
   ```python
-  client.init('./PATH/TO/KEY_FILE.json')
+  req = googlesheets.resource.BatchUpdate()
+
+  req.append({
+      'addSheet': {
+          'properties': {
+              'title': sheet_name,
+              'gridProperties': {
+                  'rowCount': row_count
+              }
+          }
+      }
+  })
+
+  res = client.batch_update(req) # json response
   ```
   - _clear all rows in a sheet except the first_
   ```python
-  batch_clear = googlesheets.request.BatchUpdateValuesClear()
-  batch_clear.append('SHEET_NAME!A2:Z')
+  req = googlesheets.resource.BatchUpdateValuesClear()
 
-  print(client.batch_values_clear(batch_clear))
+  req.append('SHEET_NAME!A2:Z')
+
+  res = client.batch_values_clear(req) # json response
   ```
   - _write rows starting from the second_
   ```python
-  batch_update = googlesheets.request.BatchUpdateValuesRaw()
-  batch_update.append({
-        'range': 'SHEET_NAME!A2',
+  req = googlesheets.resource.BatchUpdateValuesRaw()
+
+  req.append({
+        'range': 'SHEET_NAME!A1',
         'values': [
-            [...],
-            [...],
+            [...], # headers
+            [...], # and all the rows ..
             ...
         ],
   })
 
-  print(client.batch_values_update(batch_update))
+  res = client.batch_values_update(req) # json response
   ```
 
 ## setup

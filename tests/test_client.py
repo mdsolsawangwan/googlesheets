@@ -1,5 +1,6 @@
 # #!/usr/bin/env python
 
+import pathlib
 import unittest
 
 import googleapiclient.http
@@ -7,7 +8,7 @@ import googleapiclient.errors
 import googleapiclient.discovery
 
 import googlesheets.api
-import googlesheets.request
+import googlesheets.resource
 
 class TestAPI(unittest.TestCase):
     def setUp(self):
@@ -34,8 +35,10 @@ class TestAPI(unittest.TestCase):
             }
         }
 
+        self.cwd = pathlib.Path(__file__).parent
+
         http = googleapiclient.http.HttpMock(
-            'data/config-v4/sheets-discovery.json',
+            self.cwd / 'data/config-v4/sheets-discovery.json',
             self.ok)
 
         self.client = googlesheets.api.Client('')
@@ -47,35 +50,35 @@ class TestAPI(unittest.TestCase):
             developerKey='secret').spreadsheets()
 
     def test_get_spreadsheet(self):
-        http = googleapiclient.http.HttpMock('data/response-v4/get-spreadsheet.json', self.ok)
+        http = googleapiclient.http.HttpMock(self.cwd / 'data/response-v4/get-spreadsheet.json', self.ok)
         res = self.client.get_spreadsheet(refresh=True, transport=http)
 
         self.assertIsNotNone(res)
 
     def test_batch_get_all_rows(self):
-        req = googlesheets.request.ValuesBatchGetFormatted()
+        req = googlesheets.resource.ValuesBatchGetFormatted()
         req.append(f'sheets!A1')
 
-        http = googleapiclient.http.HttpMock('data/response-v4/batch-values-get.json', self.ok)
+        http = googleapiclient.http.HttpMock(self.cwd / 'data/response-v4/batch-values-get.json', self.ok)
         res = self.client.batch_values_get(req, transport=http)
 
         self.assertIsNotNone(res)
 
     def test_batch_get_all_rows_no_headers(self):
-        req = googlesheets.request.ValuesBatchGetFormatted()
+        req = googlesheets.resource.ValuesBatchGetFormatted()
         req.append(f'sheets!A1')
 
-        http = googleapiclient.http.HttpMock('data/response-v4/batch-values-get.no-header.json', self.ok)
+        http = googleapiclient.http.HttpMock(self.cwd / 'data/response-v4/batch-values-get.no-header.json', self.ok)
 
         res = self.client.batch_values_get(req, transport=http)
 
         self.assertIsNotNone(res)
 
     def test_error_handling(self):
-        req = googlesheets.request.ValuesBatchGetFormatted()
+        req = googlesheets.resource.ValuesBatchGetFormatted()
         req.append(f'sheets!A1')
 
-        http = googleapiclient.http.HttpMock('data/response-v4/batch-values-get-invalid-argument.json', self.invalid_arg)
+        http = googleapiclient.http.HttpMock(self.cwd / 'data/response-v4/batch-values-get-invalid-argument.json', self.invalid_arg)
 
         try:
             self.client.batch_values_get(req, transport=http)
