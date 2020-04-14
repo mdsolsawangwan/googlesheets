@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import json
+import typing
 import pathlib
 
 import googleapiclient.errors
@@ -26,9 +27,7 @@ class Client(object):
 
     def __init__(self, spreadsheet_id: str) -> None:
         self.spreadsheet_id = spreadsheet_id
-
         self.service = None
-        self.cached_spreadsheet = None # cached spreadsheet object
 
     def __call__(self, req: 'service.request', transport: 'httplib2.Http' = None) -> dict:
         """executes a request against the googlesheets service api."""
@@ -57,30 +56,12 @@ class Client(object):
         self.service = googleapiclient.discovery.build(
             'sheets', version, **params).spreadsheets()
 
-    def get_spreadsheet(self, refresh: bool = True, transport: 'httplib2.Http' = None) -> dict:
-        """submit a request for the current spreadsheet. if `refresh` is `False`, returns a cached value."""
-
-        params = {
-            'spreadsheetId': self.spreadsheet_id
-        }
-
-        req = self.service.get(**params)
-
-        try:
-            res = self(req, transport=transport)
-        except Exception:
-            raise
-        else:
-            if self.cached_spreadsheet is None or refresh:
-                self.cached_spreadsheet = res
-
-            return self.cached_spreadsheet
-
-    def get(self, transport: 'httplib2.Http' = None) -> dict:
+    def get(self, transport: 'httplib2.Http' = None, **additional_args: typing.Any) -> dict:
         """submit a get request."""
 
         params = {
-            'spreadsheetId': self.spreadsheet_id
+            'spreadsheetId': self.spreadsheet_id,
+            **additional_args,
         }
 
         req = self.service.get(**params)
