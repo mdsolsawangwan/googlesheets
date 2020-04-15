@@ -38,7 +38,7 @@ a small `python` wrapper client for the `googlesheets` v4 api.
 
   res = client.batch_values_clear(req) # json response
   ```
-  - _write rows starting including column headers_
+  - _write rows, including column headers_
   ```python
   req = googlesheets.resource.BatchUpdateValuesRaw()
 
