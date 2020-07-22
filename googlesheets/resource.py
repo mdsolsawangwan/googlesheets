@@ -98,7 +98,7 @@ class ValuesUpdateRaw(Body):
         super().__init__(value_range, *ValuesUpdateRaw.query_parameters)
 
         self.body['body'] = {
-            'values': [value_range_body],
+            'values': value_range_body,
         }
 
 class ValuesUpdateUserEntered(Body):
@@ -110,7 +110,7 @@ class ValuesUpdateUserEntered(Body):
         super().__init__(value_range, *ValuesUpdateUserEntered.query_parameters)
 
         self.body['body'] = {
-            'values': [value_range_body],
+            'values': value_range_body,
         }
 
 class ValuesAppendRaw(Body):
@@ -127,7 +127,7 @@ class ValuesAppendRaw(Body):
         super().__init__(value_range, qp, *ValuesAppendRaw.query_parameters)
 
         self.body['body'] = {
-            'values': [value_range_body],
+            'values': value_range_body,
         }
 
 class ValuesAppendUserEntered(Body):
@@ -144,7 +144,7 @@ class ValuesAppendUserEntered(Body):
         super().__init__(value_range, qp, *ValuesAppendUserEntered.query_parameters)
 
         self.body['body'] = {
-            'values': [value_range_body],
+            'values': value_range_body,
         }
 
 class ValuesBatchGetFormatted(BatchBody):
